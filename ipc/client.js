@@ -5,13 +5,11 @@
 'use strict';
 
 var ipc = require('node-ipc');
-var argv = require('./argv');
-var args = argv.parse(process.argv);
 
 ipc.config.id = 'hello';
 ipc.config.appspace = 'cache.';
 ipc.config.retry = 1000;
-ipc.config.maxRetries = 3;
+ipc.config.stopRetrying = true;
 ipc.config.sync = true;
 
 const COMMAND = {
@@ -19,6 +17,8 @@ const COMMAND = {
   PUSH: 2,
   DEL: 3
 };
+
+let threw = false;
 
 // boot process
 function boot() {
@@ -38,38 +38,53 @@ function boot() {
   child.unref();
 }
 
+// send message to cache process
+function sendMessage() {
+  // emit client event
+  ipc.of.world.emit('app.message',
+    {
+      id: ipc.config.id,
+      message: JSON.stringify({
+        command: COMMAND.PUSH,
+        key: '.cache',
+        value: {isModule: true, requiredJS: ['base']}
+      })
+    });
+}
+
 // try to connect
 function tryConnect() {
-  ipc.connectTo('world', function() {
-    ipc.of.world.on('connect', function() {
-      ipc.log('## connected to world ##', ipc.config.delay);
 
-      // emit client event
-      ipc.of.world.emit('app.message',
-        {
-          id: ipc.config.id,
-          message: JSON.stringify({
-            command: COMMAND.QUERY,
-            key: 'zmike'
-          })
-        });
+  ipc.connectTo('world', function() {
+
+    ipc.of.world.on('connect', function() {
+      sendMessage();
     });
 
-    //ipc.of.world.on('disconnect', function() {
-    //  ipc.log('disconnected from world'.notice);
-    //});
+    ipc.of.world.on('disconnect', function() {
+      ipc.log('disconnected from world'.notice);
+    });
+
+    ipc.of.world.on('error', function(err) {
+      if (threw) return;
+
+      if (err.errno === 'ENOENT'
+        || err.errno === 'ECONNREFUSED') {
+        threw = true;
+
+        boot();
+        tryConnect();
+      } else {
+        throw err;
+      }
+    });
 
     ipc.of.world.on('app.message', function(data) {
       ipc.log('got a message from world : '.debug, data);
     });
 
-    console.log(ipc.of.world.destroy);
+    //console.log(ipc.of.world.destroy);
   });
 }
 
-try {
-  tryConnect();
-} catch (err) {
-  boot();
-  tryConnect();
-}
+tryConnect();

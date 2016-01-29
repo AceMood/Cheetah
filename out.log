@@ -1,0 +1,11 @@
+Server path not specified, so defaulting to ipc.config.socketRoot + ipc.config.appspace + ipc.config.id /tmp/cache.world
+starting server on  /tmp/cache.world 
+starting server as Unix || Windows Socket
+## socket connection to server detected ##
+received event of :  app.message { id: [32m'hello'[39m, message: [32m'{"command":1,"key":".cache"}'[39m }
+dispatching event to socket  :  app.message { id: [32m'world'[39m, message: [32m'undefined from world!'[39m }
+socket disconnected hello
+## socket connection to server detected ##
+received event of :  app.message { id: [32m'hello'[39m, message: [32m'{"command":1,"key":".cache"}'[39m }
+dispatching event to socket  :  app.message { id: [32m'world'[39m, message: [32m'undefined from world!'[39m }
+socket disconnected hello
