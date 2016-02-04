@@ -44,11 +44,12 @@ function sendMessage() {
     {
       id: ipc.config.id,
       message: JSON.stringify({
-        command: COMMAND.QUERY,
-        key: '.cache'
-        //value: {isModule: true, requiredJS: ['base']}
+        command: COMMAND.PUSH,
+        key: '.cache',
+        value: {isModule: true, requiredJS: ['base']}
       })
-    });
+    }
+  );
 }
 
 // try to connect
@@ -56,9 +57,7 @@ function tryConnect() {
 
   ipc.connectTo('world', function() {
 
-    ipc.of.world.on('connect', function() {
-      sendMessage();
-    });
+    ipc.of.world.on('connect', sendMessage);
 
     ipc.of.world.on('disconnect', function() {
       ipc.log('disconnected from world'.notice);
@@ -72,7 +71,7 @@ function tryConnect() {
         threw = true;
 
         boot();
-        tryConnect();
+        setTimeout(tryConnect, 30);
       } else {
         throw err;
       }
@@ -81,8 +80,6 @@ function tryConnect() {
     ipc.of.world.on('app.message', function(data) {
       ipc.log('got a message from world : '.debug, data);
     });
-
-    //console.log(ipc.of.world.destroy);
   });
 }
 
