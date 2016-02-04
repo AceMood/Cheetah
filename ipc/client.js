@@ -10,6 +10,7 @@ ipc.config.id = 'hello';
 ipc.config.appspace = 'cache.';
 ipc.config.retry = 1000;
 ipc.config.stopRetrying = true;
+ipc.config.maxRetries = 0;
 ipc.config.sync = true;
 
 const COMMAND = {
@@ -27,12 +28,10 @@ function boot() {
 
   const fs = require('fs');
   const spawn = cp.spawn;
-  const out = fs.openSync('./out.log', 'a');
-  const err = fs.openSync('./out.log', 'a');
 
   const child = spawn('node', [node_path.join(__dirname, 'server.js')], {
     detached: true,
-    stdio: [ 'ignore', out, err ]
+    stdio: 'ignore'
   });
 
   child.unref();
@@ -45,9 +44,9 @@ function sendMessage() {
     {
       id: ipc.config.id,
       message: JSON.stringify({
-        command: COMMAND.PUSH,
-        key: '.cache',
-        value: {isModule: true, requiredJS: ['base']}
+        command: COMMAND.QUERY,
+        key: '.cache'
+        //value: {isModule: true, requiredJS: ['base']}
       })
     });
 }
